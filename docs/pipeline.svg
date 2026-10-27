@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320" font-family="sans-serif">
+  <defs>
+    <marker id="arr2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#37474f"/>
+    </marker>
+  </defs>
+  <rect width="680" height="320" fill="#f5f7fa"/>
+  <text x="340" y="34" text-anchor="middle" font-size="20" font-weight="bold" fill="#1f2d3d">Data Pipeline: Capture → Process → Display → Record → Playback</text>
+
+  <rect x="20" y="120" width="110" height="64" rx="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+  <text x="75" y="150" text-anchor="middle" font-size="13" fill="#0d47a1" font-weight="bold">V4L2 Capture</text>
+  <text x="75" y="170" text-anchor="middle" font-size="11" fill="#1565c0">MJPEG frame</text>
+
+  <rect x="160" y="120" width="110" height="64" rx="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+  <text x="215" y="150" text-anchor="middle" font-size="13" fill="#0d47a1" font-weight="bold">libjpeg Decode</text>
+  <text x="215" y="170" text-anchor="middle" font-size="11" fill="#1565c0">→ RGB</text>
+
+  <rect x="300" y="120" width="120" height="64" rx="8" fill="#fff3e0" stroke="#f57c00" stroke-width="2"/>
+  <text x="360" y="150" text-anchor="middle" font-size="13" fill="#e65100" font-weight="bold">Double-buffer Display</text>
+  <text x="360" y="170" text-anchor="middle" font-size="11" fill="#ef6c00">fb0 (BGRA)</text>
+
+  <rect x="460" y="120" width="120" height="64" rx="8" fill="#fff3e0" stroke="#f57c00" stroke-width="2"/>
+  <text x="520" y="150" text-anchor="middle" font-size="13" fill="#e65100" font-weight="bold">AVI Zero-Encode Rec</text>
+  <text x="520" y="170" text-anchor="middle" font-size="11" fill="#ef6c00">to /root/camera</text>
+
+  <rect x="460" y="230" width="120" height="60" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
+  <text x="520" y="258" text-anchor="middle" font-size="13" fill="#1b5e20" font-weight="bold">mplayer Playback</text>
+  <text x="520" y="278" text-anchor="middle" font-size="11" fill="#2e7d32">native decode</text>
+
+  <rect x="300" y="230" width="120" height="60" rx="8" fill="#f3e5f5" stroke="#8e24aa" stroke-width="2"/>
+  <text x="360" y="258" text-anchor="middle" font-size="12" fill="#6a1b9a" font-weight="bold">Touch UI</text>
+  <text x="360" y="278" text-anchor="middle" font-size="11" fill="#8e24aa">snap/rec/play</text>
+
+  <line x1="130" y1="152" x2="158" y2="152" stroke="#37474f" stroke-width="2" marker-end="url(#arr2)"/>
+  <line x1="270" y1="152" x2="298" y2="152" stroke="#37474f" stroke-width="2" marker-end="url(#arr2)"/>
+  <line x1="420" y1="152" x2="458" y2="152" stroke="#37474f" stroke-width="2" marker-end="url(#arr2)"/>
+  <line x1="360" y1="184" x2="360" y2="228" stroke="#8e24aa" stroke-width="2" marker-end="url(#arr2)"/>
+  <line x1="520" y1="184" x2="520" y2="228" stroke="#388e3c" stroke-width="2" marker-end="url(#arr2)"/>
+  <text x="340" y="300" text-anchor="middle" font-size="12" fill="#37474f">Live frames → touch triggers snap/rec/playback; recordings played back by on-board mplayer (no VPU, MJPEG native decode)</text>
+</svg>

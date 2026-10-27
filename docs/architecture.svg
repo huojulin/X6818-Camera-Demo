@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 440" font-family="sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#37474f"/>
+    </marker>
+  </defs>
+  <rect width="680" height="440" fill="#f5f7fa"/>
+  <text x="340" y="34" text-anchor="middle" font-size="20" font-weight="bold" fill="#1f2d3d">X6818 High-Speed Camera · System Architecture</text>
+
+  <!-- USB camera -->
+  <rect x="30" y="190" width="120" height="64" rx="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+  <text x="90" y="218" text-anchor="middle" font-size="14" fill="#0d47a1" font-weight="bold">USB Camera</text>
+  <text x="90" y="238" text-anchor="middle" font-size="11" fill="#1565c0">MJPEG / YUYV</text>
+
+  <!-- board -->
+  <rect x="200" y="70" width="280" height="320" rx="10" fill="#fff3e0" stroke="#f57c00" stroke-width="2"/>
+  <text x="340" y="94" text-anchor="middle" font-size="15" fill="#e65100" font-weight="bold">X6818 Board (S5P6818)</text>
+  <text x="340" y="116" text-anchor="middle" font-size="11" fill="#ef6c00">Cortex-A53 · 1GB DDR3 · Linux</text>
+  <rect x="225" y="135" width="230" height="50" rx="6" fill="#ffffff" stroke="#fb8c00"/>
+  <text x="340" y="158" text-anchor="middle" font-size="12" fill="#bf360c">Camera pipeline: capture · decode · double-buffer</text>
+  <text x="340" y="175" text-anchor="middle" font-size="11" fill="#bf360c">Touch UI (snap / rec / playback / exit)</text>
+  <rect x="225" y="200" width="230" height="40" rx="6" fill="#ffffff" stroke="#fb8c00"/>
+  <text x="340" y="224" text-anchor="middle" font-size="12" fill="#bf360c">Local recording: MJPEG-AVI (zero-encode)</text>
+  <rect x="225" y="255" width="230" height="40" rx="6" fill="#ffffff" stroke="#fb8c00"/>
+  <text x="340" y="279" text-anchor="middle" font-size="12" fill="#bf360c">On-board playback: mplayer native decode</text>
+  <rect x="225" y="310" width="230" height="40" rx="6" fill="#ffffff" stroke="#fb8c00"/>
+  <text x="340" y="334" text-anchor="middle" font-size="12" fill="#bf360c">Media storage /root/camera</text>
+
+  <!-- LCD -->
+  <rect x="530" y="110" width="120" height="80" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
+  <text x="590" y="145" text-anchor="middle" font-size="14" fill="#1b5e20" font-weight="bold">LCD Display</text>
+  <text x="590" y="165" text-anchor="middle" font-size="11" fill="#2e7d32">1024×600 fb0</text>
+
+  <!-- touchscreen -->
+  <rect x="530" y="280" width="120" height="70" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
+  <text x="590" y="310" text-anchor="middle" font-size="14" fill="#1b5e20" font-weight="bold">Touchscreen</text>
+  <text x="590" y="330" text-anchor="middle" font-size="11" fill="#2e7d32">event1 input</text>
+
+  <!-- PC optional -->
+  <rect x="530" y="380" width="120" height="46" rx="8" fill="#f3e5f5" stroke="#8e24aa" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="590" y="408" text-anchor="middle" font-size="13" fill="#6a1b9a" font-weight="bold">PC (optional export)</text>
+
+  <!-- links -->
+  <line x1="150" y1="222" x2="200" y2="222" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="175" y="215" text-anchor="middle" font-size="10" fill="#37474f">capture</text>
+  <line x1="480" y1="150" x2="530" y2="150" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="505" y="143" text-anchor="middle" font-size="10" fill="#37474f">display</text>
+  <line x1="530" y1="300" x2="480" y2="300" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="505" y="293" text-anchor="middle" font-size="10" fill="#37474f">control</text>
+  <line x1="480" y1="350" x2="530" y2="403" stroke="#8e24aa" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arr)"/>
+  <text x="522" y="388" text-anchor="middle" font-size="9" fill="#8e24aa">export mp4</text>
+</svg>

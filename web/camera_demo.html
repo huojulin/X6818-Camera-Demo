@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X6818 高速运动相机 Demo · 板载自包含版</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --card:#ffffff; --ink:#1f2d3d; --muted:#5b6b7b;
+    --blue:#1976d2; --orange:#f57c00; --green:#388e3c; --purple:#8e24aa;
+    --line:#e1e7ef;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;}
+  header{background:linear-gradient(120deg,#0d47a1,#1976d2);color:#fff;padding:42px 24px;text-align:center;}
+  header h1{margin:0 0 8px;font-size:28px;}
+  header p{margin:0;opacity:.92;font-size:15px;}
+  nav{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;z-index:5;}
+  nav a{color:var(--blue);text-decoration:none;font-size:14px;font-weight:600;}
+  nav a:hover{text-decoration:underline;}
+  main{max-width:980px;margin:0 auto;padding:24px 18px 60px;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin:18px 0;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  h2{font-size:21px;margin:0 0 12px;padding-left:10px;border-left:5px solid var(--blue);}
+  h3{font-size:16px;color:var(--orange);margin:18px 0 6px;}
+  p{margin:8px 0;}
+  ul{margin:8px 0 8px 4px;padding-left:20px;}
+  li{margin:5px 0;}
+  .fig{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin:14px 0;}
+  .fig svg{display:block;width:100%;height:auto;}
+  .fig figcaption{text-align:center;color:var(--muted);font-size:13px;margin-top:8px;}
+  code{background:#eef2f7;padding:2px 6px;border-radius:4px;font-family:"Consolas",monospace;font-size:13px;color:#b3261e;}
+  pre{background:#0d1b2a;color:#e6edf3;padding:14px 16px;border-radius:10px;overflow:auto;font-size:13px;line-height:1.55;}
+  pre code{background:none;color:inherit;padding:0;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
+  .card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fafcff;}
+  .card h4{margin:0 0 6px;color:var(--blue);font-size:15px;}
+  .tag{display:inline-block;background:#e3f2fd;color:#0d47a1;border-radius:20px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0;}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px;}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;}
+  th{background:#eef2f7;}
+  .placeholder{border:2px dashed #b9c5d4;border-radius:10px;padding:30px;text-align:center;color:var(--muted);background:#fafcff;}
+  footer{text-align:center;color:var(--muted);font-size:13px;padding:24px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>X6818 高速运动相机 Demo</h1>
+  <p>板载自包含方案 · 采集 / 解码 / 显示 / 录制 / 回放 全部在开发板本地闭环</p>
+</header>
+
+<nav>
+  <a href="#intro">项目简介</a>
+  <a href="#arch">系统架构</a>
+  <a href="#pipe">数据流水线</a>
+  <a href="#modules">功能模块</a>
+  <a href="#build">编译部署</a>
+  <a href="#demo">演示步骤</a>
+  <a href="#highlights">亮点难点</a>
+  <a href="#shots">实拍截图</a>
+</nav>
+
+<main>
+
+<section id="intro">
+  <h2>一、项目简介</h2>
+  <p>本 Demo 是"高速运动相机原型 v1.0"课题在 <b>X6818 开发板</b>（S5P6818，Cortex-A53 八核）上的落地实现，目标是一套<b>完全板载自包含</b>的相机系统：</p>
+  <ul>
+    <li>USB 相机采集 → 实时解码显示到 LCD；</li>
+    <li>触摸屏控制：<b>拍照 / 录像 / 回放 / 退出</b>；</li>
+    <li>零编码 MJPEG-AVI 本地录制；</li>
+    <li>板载 mplayer 直接回放。</li>
+  </ul>
+  <p><span class="tag">不依赖 PC / VM</span><span class="tag">不依赖 WiFi 回传</span><span class="tag">触屏启停</span><span class="tag">单文件 ~2000 行 C</span></p>
+  <p>程序启停全部由板子触摸屏按钮处理，断电复位后一条 <code>boot_cam.sh</code> 即可拉起全部功能。</p>
+</section>
+
+<section id="arch">
+  <h2>二、系统架构</h2>
+  <figure class="fig">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 440" font-family="sans-serif" style="width:100%;height:auto;">
+      <defs>
+        <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#37474f"/>
+        </marker>
+      </defs>
+      <rect width="680" height="440" fill="#f5f7fa"/>
+      <text x="340" y="34" text-anchor="middle" font-size="20" font-weight="bold" fill="#1f2d3d">X6818 高速运动相机 · 系统架构</text>
+      <rect x="30" y="190" width="120" height="64" rx="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+      <text x="90" y="218" text-anchor="middle" font-size="14" fill="#0d47a1" font-weight="bold">USB 相机</text>
+      <text x="90" y="238" text-anchor="middle" font-size="11" fill="#1565c0">MJPEG / YUYV</text>
+      <rect x="200" y="70" width="280" height="320" rx="10" fill="#fff3e0" stroke="#f57c00" stroke-width="2"/>
+      <text x="340" y="94" text-anchor="middle" font-size="15" fill="#e65100" font-weight="bold">X6818 开发板 (S5P6818)</text>
+      <text x="340" y="116" text-anchor="middle" font-size="11" fill="#ef6c00">Cortex-A53 · 1GB DDR3 · Linux</text>
+      <rect x="225" y="135" width="230" height="50" rx="6" fill="#ffffff" stroke="#fb8c00"/>
+      <text x="340" y="158" text-anchor="middle" font-size="12" fill="#bf360c">相机管线：采集·解码·双缓冲显示</text>
+      <text x="340" y="175" text-anchor="middle" font-size="11" fill="#bf360c">触摸 UI 控制（拍照/录/回放/退出）</text>
+      <rect x="225" y="200" width="230" height="40" rx="6" fill="#ffffff" stroke="#fb8c00"/>
+      <text x="340" y="224" text-anchor="middle" font-size="12" fill="#bf360c">本地录制：MJPEG-AVI 零编码</text>
+      <rect x="225" y="255" width="230" height="40" rx="6" fill="#ffffff" stroke="#fb8c00"/>
+      <text x="340" y="279" text-anchor="middle" font-size="12" fill="#bf360c">板载回放：mplayer 原生解码</text>
+      <rect x="225" y="310" width="230" height="40" rx="6" fill="#ffffff" stroke="#fb8c00"/>
+      <text x="340" y="334" text-anchor="middle" font-size="12" fill="#bf360c">媒体存储 /root/camera</text>
+      <rect x="530" y="110" width="120" height="80" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
+      <text x="590" y="145" text-anchor="middle" font-size="14" fill="#1b5e20" font-weight="bold">LCD 显示屏</text>
+      <text x="590" y="165" text-anchor="middle" font-size="11" fill="#2e7d32">1024×600 fb0</text>
+      <rect x="530" y="280" width="120" height="70" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
+      <text x="590" y="310" text-anchor="middle" font-size="14" fill="#1b5e20" font-weight="bold">触摸屏</text>
+      <text x="590" y="330" text-anchor="middle" font-size="11" fill="#2e7d32">event1 输入</text>
+      <rect x="530" y="380" width="120" height="46" rx="8" fill="#f3e5f5" stroke="#8e24aa" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="590" y="408" text-anchor="middle" font-size="13" fill="#6a1b9a" font-weight="bold">PC（可选导出）</text>
+      <line x1="150" y1="222" x2="200" y2="222" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+      <text x="175" y="215" text-anchor="middle" font-size="10" fill="#37474f">采集</text>
+      <line x1="480" y1="150" x2="530" y2="150" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+      <text x="505" y="143" text-anchor="middle" font-size="10" fill="#37474f">显示</text>
+      <line x1="530" y1="300" x2="480" y2="300" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+      <text x="505" y="293" text-anchor="middle" font-size="10" fill="#37474f">控制</text>
+      <line x1="480" y1="350" x2="530" y2="403" stroke="#8e24aa" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arr)"/>
+      <text x="522" y="388" text-anchor="middle" font-size="9" fill="#8e24aa">导出mp4</text>
+    </svg>
+    <figcaption>图 1 · 系统架构：外设 → 板载处理 → 显示/输入/存储（PC 导出为可选）</figcaption>
+  </figure>
+</section>
+
+<section id="pipe">
+  <h2>三、数据流水线</h2>
+  <figure class="fig">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320" font-family="sans-serif" style="width:100%;height:auto;">
+      <defs>
+        <marker id="arr2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#37474f"/>
+        </marker>
+      </defs>
+      <rect width="680" height="320" fill="#f5f7fa"/>
+      <text x="340" y="34" text-anchor="middle" font-size="20" font-weight="bold" fill="#1f2d3d">数据流水线：采集 → 处理 → 显示 → 录制 → 回放</text>
+      <rect x="20" y="120" width="110" height="64" rx="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+      <text x="75" y="150" text-anchor="middle" font-size="13" fill="#0d47a1" font-weight="bold">V4L2 采集</text>
+      <text x="75" y="170" text-anchor="middle" font-size="11" fill="#1565c0">MJPEG 帧</text>
+      <rect x="160" y="120" width="110" height="64" rx="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+      <text x="215" y="150" text-anchor="middle" font-size="13" fill="#0d47a1" font-weight="bold">libjpeg 解码</text>
+      <text x="215" y="170" text-anchor="middle" font-size="11" fill="#1565c0">→ RGB</text>
+      <rect x="300" y="120" width="120" height="64" rx="8" fill="#fff3e0" stroke="#f57c00" stroke-width="2"/>
+      <text x="360" y="150" text-anchor="middle" font-size="13" fill="#e65100" font-weight="bold">双缓冲显示</text>
+      <text x="360" y="170" text-anchor="middle" font-size="11" fill="#ef6c00">fb0 (BGRA)</text>
+      <rect x="460" y="120" width="120" height="64" rx="8" fill="#fff3e0" stroke="#f57c00" stroke-width="2"/>
+      <text x="520" y="150" text-anchor="middle" font-size="13" fill="#e65100" font-weight="bold">AVI 零编码录制</text>
+      <text x="520" y="170" text-anchor="middle" font-size="11" fill="#ef6c00">写 /root/camera</text>
+      <rect x="460" y="230" width="120" height="60" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="2"/>
+      <text x="520" y="258" text-anchor="middle" font-size="13" fill="#1b5e20" font-weight="bold">mplayer 回放</text>
+      <text x="520" y="278" text-anchor="middle" font-size="11" fill="#2e7d32">原生解码</text>
+      <rect x="300" y="230" width="120" height="60" rx="8" fill="#f3e5f5" stroke="#8e24aa" stroke-width="2"/>
+      <text x="360" y="258" text-anchor="middle" font-size="12" fill="#6a1b9a" font-weight="bold">触摸屏 UI</text>
+      <text x="360" y="278" text-anchor="middle" font-size="11" fill="#8e24aa">拍照/录/回放</text>
+      <line x1="130" y1="152" x2="158" y2="152" stroke="#37474f" stroke-width="2" marker-end="url(#arr2)"/>
+      <line x1="270" y1="152" x2="298" y2="152" stroke="#37474f" stroke-width="2" marker-end="url(#arr2)"/>
+      <line x1="420" y1="152" x2="458" y2="152" stroke="#37474f" stroke-width="2" marker-end="url(#arr2)"/>
+      <line x1="360" y1="184" x2="360" y2="228" stroke="#8e24aa" stroke-width="2" marker-end="url(#arr2)"/>
+      <line x1="520" y1="184" x2="520" y2="228" stroke="#388e3c" stroke-width="2" marker-end="url(#arr2)"/>
+      <text x="340" y="300" text-anchor="middle" font-size="12" fill="#37474f">实时帧 → 触屏触发拍照/录像/回放；录制文件由板载 mplayer 直接回放（无 VPU，走 MJPEG 原生解码）</text>
+    </svg>
+    <figcaption>图 2 · 数据流水线：相机帧经解码显示，同时可触发录制与回放</figcaption>
+  </figure>
+</section>
+
+<section id="modules">
+  <h2>四、功能模块说明（phone_view.c 关键代码模块）</h2>
+  <div class="grid">
+    <div class="card">
+      <h4>1. V4L2 相机采集</h4>
+      <p><code>cam_init / cam_capture_frame</code>：打开 <code>/dev/videoX</code>，协商 MJPEG 格式（回退 YUYV），mmap 流式采集，逐帧取出 JPEG 数据。</p>
+    </div>
+    <div class="card">
+      <h4>2. MJPEG 解码</h4>
+      <p>用 libjpeg（优先 libjpeg-turbo NEON）<code>jpeg_decompress</code> 把 JPEG 解成 RGB；YUYV 源先软件转码再走同一显示路径。</p>
+    </div>
+    <div class="card">
+      <h4>3. 双缓冲帧缓冲显示</h4>
+      <p><code>fb_init / fb_flush</code>：真实 fb0 用 mmap，另开离屏 malloc 缓冲；所有绘制写离屏，每帧末尾一次性 <code>memcpy</code> 到 fb0，彻底消除按钮闪烁与撕裂。</p>
+    </div>
+    <div class="card">
+      <h4>4. MJPEG-AVI 零编码录制</h4>
+      <p><code>avirec_*</code>：MJPEG 帧直接封装进 AVI（RIFF/AVI/LIST/hdrl/movi/idx1），首帧到达才建文件（杜绝空文件）；停止时回填 avih/strh 并写入实测帧率 <code>.fps</code> 旁注。</p>
+    </div>
+    <div class="card">
+      <h4>5. 触摸屏 UI 控制</h4>
+      <p><code>touch_thread / draw_bottom_buttons / hit_button</code>：读 <code>event1</code>，底部四按钮（拍照 / 录·停 / 回放 / 退出），带单实例守卫避免多进程抢 fb0。</p>
+    </div>
+    <div class="card">
+      <h4>6. 板载回放</h4>
+      <p><code>start_board_playback</code>：取 <code>/root/camera</code> 最新 <code>shot_*.jpg</code> 或 <code>rec_*.avi</code>；照片解码铺满 + 触摸返回，录像用 mplayer 原生解码 + 实测帧率 + 索引修正。</p>
+    </div>
+  </div>
+</section>
+
+<section id="build">
+  <h2>五、编译与部署</h2>
+  <h3>5.1 交叉编译（VM 端）</h3>
+  <pre><code>cd camera_demo_showcase
+make clean &amp;&amp; make          # 产出 arm 可执行 phone_view
+# 可选 NEON 加速：先准备 libjpeg-turbo/lib/libjpeg.a，Makefile 自动优先链接</code></pre>
+  <h3>5.2 固化到板子（VM → 板子，ext4 持久，复位不丢）</h3>
+  <pre><code>bash install_to_board.sh &lt;板子IP&gt;
+# phone_view → /usr/bin/phone_view，脚本 → /root/*.sh</code></pre>
+  <h3>5.3 仅更新二进制（已固化过更快）</h3>
+  <pre><code># 板子串口
+killall phone_view
+# VM 端（冒号前不要有空格）
+scp phone_view root@&lt;板子IP&gt;:/usr/bin/phone_view
+# 板子复位后只需一条
+sh /root/boot_cam.sh</code></pre>
+</section>
+
+<section id="demo">
+  <h2>六、现场演示步骤（板子触屏操作）</h2>
+  <ol>
+    <li>串口（或 SSH）执行 <code>sh /root/boot_cam.sh</code>（自动起 sshd、按真实 major:minor 建相机节点、起 phone_view）。</li>
+    <li>LCD 显示相机实时画面，底部四个触摸按钮：<b>拍照 / 录·停 / 回放 / 退出</b>。</li>
+    <li>点【录】开始录制 → 再点【录·停】停止，自动存 <code>/root/camera/rec_*.avi</code>。</li>
+    <li>点【拍照】把当前帧存为 jpg 到 <code>/root/camera/</code>。</li>
+    <li>点【回放】板载 mplayer 播放最新录像（或显示最新照片，触摸任意处返回）。</li>
+    <li>点【退出】干净退出进程。</li>
+  </ol>
+  <p class="placeholder" style="border-color:#fb8c00;color:#e65100;">提示：本板无硬件视频解码器（VPU），H.264 解不动会黑屏；板载回放走 MJPEG-AVI 原生解码路线，配合实测帧率旁注与 AVI 索引修正，可完整流畅回放。</p>
+</section>
+
+<section id="highlights">
+  <h2>七、技术亮点与难点</h2>
+  <table>
+    <tr><th>要点</th><th>说明</th></tr>
+    <tr><td>无 VPU → 放弃 H.264</td><td>板子无硬件解码器，预装 mplayer 软解 H.264 黑屏；改用 MJPEG-AVI 原生解码回放。</td></tr>
+    <tr><td>AVI 索引偏移修正</td><td>索引 dwOffset 基准改为相对 movi 数据起点（规范值），修正老 mplayer 错位只放开头的问题。</td></tr>
+    <tr><td>2 字节帧对齐</td><td>帧 padding 按 AVI 标准 2 字节对齐，兼容 1.0rc2 老 mplayer 的顺序读取。</td></tr>
+    <tr><td>双缓冲去闪烁</td><td>离屏缓冲 + 每帧 memcpy，消除单缓冲下的按钮闪动/撕裂。</td></tr>
+    <tr><td>零编码录制</td><td>MJPEG 帧直接封 AVI，不依赖 ffmpeg/x264，板子即时可录。</td></tr>
+    <tr><td>无 udev/mdev 建节点</td><td>板子不自动建 /dev 节点，setup_cam.sh 按真实 major:minor 手动 mknod 并排除显示层。</td></tr>
+    <tr><td>自包含部署</td><td>程序启动自动 mkdir /root/camera；复位后一条 boot_cam.sh 拉起全部。</td></tr>
+  </table>
+</section>
+
+<section id="shots">
+  <h2>八、实拍截图（现场演示时补充）</h2>
+  <div class="placeholder">此处放置板子 LCD 实拍截图：① 实时取景 + 底部四按钮；② 回放播放画面；③ 拍照/录像产物列表（/root/camera）。<br>将图片保存为 shot_live.jpg / shot_playback.jpg 后在此引用。</div>
+</section>
+
+</main>
+
+<footer>
+  X6818 高速运动相机 Demo · 板载自包含版 · 配套代码包 camera_demo_showcase/
+</footer>
+</body>
+</html>
